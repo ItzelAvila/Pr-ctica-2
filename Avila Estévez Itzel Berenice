@@ -1,0 +1,92 @@
+import random
+
+# Definición de la clase Persona para representar a los pacientes
+class Persona:
+    def __init__(self, tiempo_llegada, urgencia):
+        self.tiempo_llegada = tiempo_llegada  # Tiempo de llegada del paciente a la consulta
+        self.urgencia = urgencia  # Booleano que indica si el paciente tiene urgencia o no
+
+# Definición de la clase Cola para gestionar la cola de pacientes
+class Cola:
+    def __init__(self):
+        self.personas = []  # Lista para almacenar a las personas en la cola
+    def agregar_persona(self, persona):
+        self.personas.append(persona)  # Agrega una persona a la cola
+
+    def siguiente_persona(self):
+        if self.personas:
+            return self.personas.pop(0)  # Devuelve y elimina a la próxima persona en la cola
+        else:
+            return None
+
+    def esta_vacia(self):
+        return len(self.personas) == 0  # Verifica si la cola está vacía
+
+# Definición de la clase Simulacion para simular el sistema de consultas médicas
+class Simulacion:
+    def __init__(self):
+        self.reloj = 0  # Reloj que representa el tiempo actual de la simulación
+        self.cola = Cola()  # Objeto de la clase Cola para gestionar la cola de pacientes
+        self.tiempos_espera = []  # Lista para almacenar los tiempos de espera de los pacientes
+
+    def simular(self, num_personas, tiempo_atencion, prioridad_urgencia=False):
+        # Función para simular el sistema con un número específico de personas y tiempo de atención
+        self.reloj = 0  # Reinicia el reloj antes de comenzar la simulación
+        for _ in range(num_personas):
+            tiempo_llegada = random.uniform(0.5, 50)  # Tiempo entre llegadas de pacientes
+            self.reloj += tiempo_llegada  # Avanza el reloj al próximo evento
+            urgencia = random.random() < 0.2 if prioridad_urgencia else False  # Determina aleatoriamente si el paciente tiene urgencia
+            persona = Persona(self.reloj, urgencia)  # Crea un objeto Persona con los datos generados
+            tiempo_espera = max(0, self.reloj - persona.tiempo_llegada)  # Calcula el tiempo de espera del paciente
+            self.tiempos_espera.append(tiempo_espera)  # Registra el tiempo de espera en la lista
+            if self.cola.esta_vacia():
+                tiempo_espera = 0  # No hay espera si la cola está vacía
+            else:
+                if prioridad_urgencia and urgencia:  # Si hay prioridad de urgencia y el paciente actual es urgente
+                    tiempo_espera = max(0, self.reloj - self.cola.personas[-1].tiempo_llegada)  # Calcula el tiempo de espera en la cola
+                else:
+                    tiempo_espera = max(0, self.reloj - self.cola.personas[-1].tiempo_llegada) if not urgencia else 0
+            self.tiempos_espera.append(tiempo_espera)  # Registra el tiempo de espera en la lista
+            self.cola.agregar_persona(persona)  # Agrega al paciente a la cola
+            self.reloj += tiempo_atencion  # Avanza el reloj al próximo evento
+
+    def tiempo_promedio_espera(self):
+        return sum(self.tiempos_espera) / len(self.tiempos_espera)  # Calcula el tiempo promedio de espera
+
+# Función para mostrar el menú
+def mostrar_menu():
+    print("\nMenú:")
+    print("1. Caso consulta de 30 minutos")
+    print("2. Caso consulta de 20 minutos")
+    print("3. Caso prioridad de urgencias")
+    print("4. Salir")
+
+# Simulación
+while True:
+    mostrar_menu()
+    opcion = input("Selecciona una opción: ")
+
+    if opcion == "1":
+        sim = Simulacion()
+        sim.simular(50000, tiempo_atencion=30)  # Simula el caso de consultas de 30 minutos
+        tiempo_promedio = sim.tiempo_promedio_espera()  # Calcula el tiempo promedio de espera
+        print("Tiempo promedio de espera:", tiempo_promedio, "minutos")
+
+    elif opcion == "2":
+        sim = Simulacion()
+        sim.simular(50000, tiempo_atencion=20)  # Simula el caso de consultas de 20 minutos
+        tiempo_promedio = sim.tiempo_promedio_espera()  # Calcula el tiempo promedio de espera
+        print("Tiempo promedio de espera:", tiempo_promedio, "minutos")
+
+    elif opcion == "3":
+        sim = Simulacion()
+        sim.simular(50000, tiempo_atencion=20, prioridad_urgencia=True)  # Simula el caso de prioridad de urgencias con tiempo de atención de 20 minutos y dando prioridad a las urgencias
+        tiempo_promedio = sim.tiempo_promedio_espera()  # Calcula el tiempo promedio de espera
+        print("Tiempo promedio de espera:", tiempo_promedio, "minutos")
+
+    elif opcion == "4":
+        print("Saliendo del programa...")
+        break
+
+    else:
+        print("Opción no válida. Por favor, selecciona una opción válida.")
